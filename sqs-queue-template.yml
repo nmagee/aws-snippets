@@ -1,0 +1,9 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: SQS and Lambda
+Resources:
+  MyQueue:
+    Properties:
+      QueueName: vis-timeout-queue
+      VisibilityTimeout: 60
+    Type: 'AWS::SQS::Queue'
+    DeletionPolicy: Delete

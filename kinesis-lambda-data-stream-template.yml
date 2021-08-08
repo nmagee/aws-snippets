@@ -1,0 +1,77 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  LambdaBasicExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: lambda_basic_execution
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+  LambdaBasicExecutionPolicies:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: LambdaBasicExecutionPolicy
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - logs:CreateLogGroup
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+              - kinesis:GetRecords
+              - kinesis:GetShardIterator
+              - kinesis:DescribeStream
+              - kinesis:ListStreams
+            Resource:
+              - '*'
+      Roles:
+        - !Ref 'LambdaBasicExecutionRole'
+  LambdaDynamoRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: lambda_basic_execution_dynamodb
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+  LambdaBasicExecutionDynamoDBPolicies:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: LambdaBasicExecutionDynamoDBPolicy
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - dynamodb:GetRecords
+              - dynamodb:GetShardIterator
+              - dynamodb:DescribeStream
+              - dynamodb:ListStreams
+              - logs:CreateLogGroup
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+              - lambda:InvokeFunction
+              - dynamodb:UpdateItem
+            Resource: '*'
+      Roles:
+        - !Ref 'LambdaDynamoRole'
+  ReadOnlyGroup:
+    Type: AWS::IAM::Group
+    Properties:
+      GroupName: QLReadOnly
+      ManagedPolicyArns: [ "arn:aws:iam::aws:policy/ReadOnlyAccess" ]
+  GroupAssignment:
+    Type: AWS::IAM::UserToGroupAddition
+    DependsOn: ReadOnlyGroup
+    Properties: 
+      GroupName: QLReadOnly
+      Users:
+      - awsstudent

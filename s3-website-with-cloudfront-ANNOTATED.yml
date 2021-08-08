@@ -1,0 +1,108 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Simple CloudFront distribution with an S3 origin'
+
+
+# Creates FOUR resources:
+Resources:
+
+# 1. Creates an S3 bucket that is private, configured to be a website.
+  S3Bucket:
+    DeletionPolicy: 'Delete'
+    Metadata:
+      Comment: 'Bucket to store some data'
+    Properties:
+      BucketName: !Sub 'cs4740-${AWS::StackName}'
+      AccessControl: Private
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: error.html
+    Type: 'AWS::S3::Bucket'
+    DeletionPolicy: Delete
+
+# 2. Creates an S3 bucket policy connecting to the CloudFront OriginAccessIdentity.
+# This policy works with item #4 below and means CloudFront can read the contents of the
+# bucket even though it is private.
+  S3BucketPolicy:
+    Metadata:
+      Comment: 'Bucket policy to allow cloudfront to access the data'
+    Properties:
+      Bucket: !Ref S3Bucket
+      PolicyDocument:
+        Id: PubWebPolicy
+        Version: 2012-10-17
+        Statement:
+          - Action:
+              - 's3:GetObject'
+            Effect: 'Allow'
+            Principal:
+              CanonicalUser: !GetAtt CfOriginAccessIdentity.S3CanonicalUserId
+            Resource:
+              - !Sub 'arn:aws:s3:::${S3Bucket}/*'
+    Type: 'AWS::S3::BucketPolicy'
+    DeletionPolicy: Delete
+
+# 3. Creates the actual CloudFront distribution, which allows both HEAD and GET methods, with a TTL of 86400.
+# This means the cache has a duration of 24 hours by default.
+  CfDistribution:
+    Metadata:
+      Comment: 'A simple CloudFront distribution with an S3 origin'
+    Properties:
+      DistributionConfig:
+        Comment: 'A simple distribution with an S3 origin'
+        DefaultCacheBehavior:
+          AllowedMethods:
+            - 'HEAD'
+            - 'GET'
+          CachedMethods:
+            - 'HEAD'
+            - 'GET'
+          Compress: false
+          DefaultTTL: 86400
+          ForwardedValues:
+            Cookies:
+              Forward: 'none'
+            Headers:
+              - 'Origin'
+            QueryString: false
+          MaxTTL: 31536000
+          MinTTL: 86400
+          TargetOriginId: !Sub 's3-origin-${S3Bucket}'
+          ViewerProtocolPolicy: 'redirect-to-https'
+        DefaultRootObject: 'index.html'
+        Enabled: true
+        HttpVersion: 'http1.1'
+        IPV6Enabled: false
+        Origins:
+          - DomainName: !GetAtt S3Bucket.DomainName
+            Id: !Sub 's3-origin-${S3Bucket}'
+            OriginPath: ''
+            S3OriginConfig:
+              OriginAccessIdentity: !Sub 'origin-access-identity/cloudfront/${CfOriginAccessIdentity}'
+        PriceClass: 'PriceClass_All'
+    Type: 'AWS::CloudFront::Distribution'
+
+# 4. This is the OriginAccessIdentity for CloudFront, works with #2 above. 
+  CfOriginAccessIdentity:
+    Metadata:
+      Comment: 'Access S3 bucket content only through CloudFront'
+    Properties:
+      CloudFrontOriginAccessIdentityConfig:
+        Comment: 'Access S3 bucket content only through CloudFront'
+    Type: 'AWS::CloudFront::CloudFrontOriginAccessIdentity'
+
+# This section simply echoes back values of resources created.
+Outputs:
+  S3BucketName:
+    Description: 'Bucket name'
+    Value: !Ref S3Bucket
+  CfDistributionId:
+    Description: 'Id for our cloudfront distribution'
+    Value: !Ref CfDistribution
+  CfDistributionDomainName:
+    Description: 'Domain name for our cloudfront distribution'
+    Value: !GetAtt CfDistribution.DomainName
+  WebsiteURL:
+    Value: !GetAtt 
+      - S3Bucket
+      - WebsiteURL
+    Description: 'URL for website hosted on S3'

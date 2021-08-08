@@ -1,0 +1,99 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: SQS and Lambda
+Resources:
+  MyQueue:
+    Properties:
+      QueueName: pa3-queue
+    Type: 'AWS::SQS::Queue'
+    DeletionPolicy: Delete
+  PopulateQueue:
+    Type: 'AWS::Lambda::Function'
+    DeletionPolicy: Delete
+    Properties:
+      FunctionName: PopulateQueue
+      Description: PA3 Lambda function to throw random things into SQS
+      Handler: lambda_function.lambda_handler
+      Role: !GetAtt 
+        - PopulateSqsRole
+        - Arn
+      Code:
+        S3Bucket: cs4740-resources
+        S3Key: pa3_lambda.zip
+      Runtime: python3.8
+      Timeout: 300
+  QueueSchedule:
+    Type: 'AWS::Events::Rule'
+    Properties:
+      Name: PopulateSqsSchedule
+      Description: PA3 Triggers a flood of SQS messages
+      ScheduleExpression: rate(1 minute)
+      Targets:
+        - Id: PopulateSqsSchedule
+          Arn:
+            'Fn::GetAtt':
+              - PopulateQueue
+              - Arn
+      State: ENABLED
+  PopulateSqsInvokeLambdaPermission:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      FunctionName:
+        Ref: PopulateQueue
+      Action: 'lambda:InvokeFunction'
+      Principal: events.amazonaws.com
+      SourceArn:
+        'Fn::GetAtt':
+          - QueueSchedule
+          - Arn
+  PopulateSqsRole:
+    Type: 'AWS::IAM::Role'
+    DeletionPolicy: Delete
+    Properties:
+      RoleName: PopulateSqsRole
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: /
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSQSFullAccess
+      Policies:
+        - PolicyName: AWSLambdaBasicExecutionRole
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource: '*'
+        - PolicyName: PopulateSqsPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: 'sqs:*'
+                Resource: '*'
+Outputs:
+  QueueName:
+    Description: The name of the queue
+    Value: !GetAtt 
+      - MyQueue
+      - QueueName
+  QueueURL:
+    Description: The URL of the queue
+    Value: !Ref MyQueue
+  PopulateSqsRole:
+    Description: IAM Role for your Lambda fcn
+    Value: !Ref PopulateSqsRole
+  LambdaFunction:
+    Description: Lambda function for populating your SQS queue.
+    Value: !GetAtt 
+      - PopulateQueue
+      - Arn
