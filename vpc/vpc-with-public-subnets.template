@@ -112,7 +112,3 @@ Outputs:
   PublicSubnet2:
     Description: A reference to the public subnet in the 2nd Availability Zone
     Value: !Ref PublicSubnet2
-
-  NoIngressSecurityGroup:
-    Description: Security group with no ingress rule
-    Value: !Ref NoIngressSecurityGroup
