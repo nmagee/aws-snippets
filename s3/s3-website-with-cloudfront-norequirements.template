@@ -5,7 +5,6 @@ Parameters:
   S3BucketName:
     Type: String
     Description: The name for the S3 bucket - must be unique across all of AWS
-    AllowedPattern: '^[a-z0-9]{5,40}$'
 
 Resources:
   S3Bucket:
