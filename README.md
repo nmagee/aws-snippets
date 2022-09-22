@@ -1,3 +1,3 @@
-# aws-cloudformation
+# aws-snippets
 
-Sample CloudFormation templates for CS4740.
+Sample CloudFormation/CLI/boto3 templates for CS4740.
