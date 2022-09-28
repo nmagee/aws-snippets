@@ -1,0 +1,196 @@
+AWSTemplateFormatVersion: 2010-09-09
+Parameters:
+  KeyName:
+    Description: Select an existing EC2 KeyPair for SSH access.
+    Type: 'AWS::EC2::KeyPair::KeyName'
+    ConstraintDescription: Select an existing EC2 KeyPair.
+  BucketName:
+    Description: Create a new bucket to use with this EC2 instance.
+    Type: String
+
+Resources:
+  S3Bucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      AccessControl: PublicRead
+      BucketName: !Ref BucketName
+
+  VPC:
+    Type: 'AWS::EC2::VPC'
+    Properties:
+      CidrBlock: 192.168.0.0/16
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+    DeletionPolicy: Delete
+
+  InternetGateway:
+    Type: 'AWS::EC2::InternetGateway'
+    DependsOn: VPC
+    DeletionPolicy: Delete
+
+  AttachGateway:
+    Type: 'AWS::EC2::VPCGatewayAttachment'
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+    DeletionPolicy: Delete
+
+  PublicSubnetA:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 192.168.11.0/24
+      AvailabilityZone: us-east-1a
+    DeletionPolicy: Delete
+
+  PublicRouteTable:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref VPC
+    DeletionPolicy: Delete
+
+  PublicRoute1:
+    Type: 'AWS::EC2::Route'
+    DependsOn: AttachGateway
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+    DeletionPolicy: Delete
+
+  PublicSubnetARouteTableAssociation:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref PublicSubnetA
+      RouteTableId: !Ref PublicRouteTable
+    DeletionPolicy: Delete
+
+  InstanceRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      RoleName: ec2-instance-role
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: /
+    DeletionPolicy: Delete
+
+  InstanceS3Policy:
+    Type: 'AWS::IAM::Policy'
+    Properties:
+      PolicyName: S3Policy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 's3:*'
+            Resource:
+              - !Sub arn:aws:s3:::${S3Bucket}
+              - !Sub arn:aws:s3:::${S3Bucket}/*
+      Roles:
+        - !Ref InstanceRole
+    DeletionPolicy: Delete
+
+  InstanceProfile:
+    Type: 'AWS::IAM::InstanceProfile'
+    Properties:
+      InstanceProfileName: ec2-instance-profile
+      Path: /
+      Roles:
+        - !Ref InstanceRole
+    DeletionPolicy: Delete
+
+  InstanceSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: SSH Access
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 8080
+          ToPort: 8080
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+    DeletionPolicy: Delete
+
+  IPAddress:
+    Type: 'AWS::EC2::EIP'
+    Properties:
+      Domain: vpc
+      InstanceId: !Ref EC2Instance
+    DeletionPolicy: Delete
+
+  EC2Instance:
+    Type: 'AWS::EC2::Instance'
+    Properties:
+      KeyName: !Ref KeyName
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: 'true'
+          DeviceIndex: '0'
+          GroupSet:
+            - Ref: InstanceSecurityGroup
+          SubnetId:
+            Ref: PublicSubnetA
+      InstanceType: t2.micro
+      AvailabilityZone: us-east-1a
+      ImageId: ami-026b57f3c383c2eec
+      IamInstanceProfile: !Ref InstanceProfile
+      UserData:
+        Fn::Base64: 
+          !Sub |
+          #!/bin/bash -xe
+          yum update -y
+          yum install docker -y
+          systemctl enable docker && systemctl start docker
+          docker run -d -p 8080:80 uvarc/accord-demo:nsf
+          aws sqs send-message --region us-east-1 --queue-url "https://sqs.us-east-1.amazonaws.com/440848399208/incoming" --message-body "checking in"
+    DeletionPolicy: Delete
+
+  NewVolume:
+    Type: 'AWS::EC2::Volume'
+    Properties:
+      Size: 14
+      VolumeType: gp2
+      Encrypted: true
+      AvailabilityZone: !GetAtt EC2Instance.AvailabilityZone
+    DeletionPolicy: Delete
+
+  MountPoint:
+    Type: 'AWS::EC2::VolumeAttachment'
+    Properties:
+      InstanceId: !Ref EC2Instance
+      VolumeId: !Ref NewVolume
+      Device: /dev/sdh
+    DeletionPolicy: Delete
+
+Outputs:
+  VPCId:
+    Value: !Ref VPC
+  IamRole:
+    Value: !Ref InstanceRole
+  SecGrpID:
+    Value: !Ref InstanceSecurityGroup
+  InstanceID:
+    Value: !Ref EC2Instance
+  EIP:
+    Value: !Ref IPAddress
+  S3BucketName:
+    Value: !Ref BucketName
+  URL:
+    Value: !Join 
+      - ''
+      - - 'http://'
+        - !GetAtt
+          - EC2Instance
+          - PublicIp
+        - ':8080/'
