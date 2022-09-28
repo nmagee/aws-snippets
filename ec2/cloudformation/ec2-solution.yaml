@@ -1,4 +1,8 @@
 AWSTemplateFormatVersion: 2010-09-09
+Description: This template creates an S3 bucket, a new VPC with a public subnet,
+  provisions an EC2 instance with a 2nd EBS volume, EIP, and IAM Role that grants
+  it full permission to the S3 bucket. Finally, the instance bootstraps with a 
+  container and sends an SQS message to another account verifying it has launched.
 Parameters:
   KeyName:
     Description: Select an existing EC2 KeyPair for SSH access.
