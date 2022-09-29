@@ -1,0 +1,23 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Simple S3 Bucket'
+
+Parameters:
+  S3BucketName:
+    Type: String
+    Description: The name for the S3 bucket
+    AllowedPattern: '^[a-z0-9]{5,40}$'
+
+Resources:
+  S3Bucket:
+    DeletionPolicy: 'Delete'
+    Metadata:
+      Comment: 'A Bucket to store some data'
+    Properties:
+      BucketName: !Ref S3BucketName
+      AccessControl: Private
+    Type: 'AWS::S3::Bucket'
+
+Outputs:
+  S3BucketName:
+    Description: 'Bucket name'
+    Value: !Ref S3Bucket

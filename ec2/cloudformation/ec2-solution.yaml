@@ -157,7 +157,10 @@ Resources:
           yum install docker -y
           systemctl enable docker && systemctl start docker
           docker run -d -p 8080:80 uvarc/accord-demo:nsf
-          aws sqs send-message --region us-east-1 --queue-url "https://sqs.us-east-1.amazonaws.com/440848399208/incoming" --message-body "checking in"
+          curl -O https://gist.githubusercontent.com/nmagee/262d35eefa30b6fdfb2c61068c24046f/raw/2988321b76f06af08fd7df22a31ec104da35bd69/volume2.sh
+          /bin/bash volume2.sh
+          HOST=`curl http://169.254.169.254/latest/meta-data/hostname`
+          aws sqs send-message --region us-east-1 --queue-url "https://sqs.us-east-1.amazonaws.com/440848399208/incoming" --message-body "$HOST checking in"
     DeletionPolicy: Delete
 
   NewVolume:
