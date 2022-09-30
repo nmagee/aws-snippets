@@ -3,7 +3,7 @@ Description: SQS and Lambda
 Resources:
   MyQueue:
     Properties:
-      QueueName: vis-timeout-queue
+      QueueName: simple-queue
       VisibilityTimeout: 60
     Type: 'AWS::SQS::Queue'
     DeletionPolicy: Delete

@@ -127,7 +127,7 @@ Resources:
           CidrIp: 0.0.0.0/0
     DeletionPolicy: Delete
 
-  IPAddress:
+  EIPAddress:
     Type: 'AWS::EC2::EIP'
     Properties:
       Domain: vpc
@@ -163,7 +163,7 @@ Resources:
           aws sqs send-message --region us-east-1 --queue-url "https://sqs.us-east-1.amazonaws.com/440848399208/incoming" --message-body "$HOST checking in"
     DeletionPolicy: Delete
 
-  NewVolume:
+  AddVolume:
     Type: 'AWS::EC2::Volume'
     Properties:
       Size: 14
@@ -172,7 +172,7 @@ Resources:
       AvailabilityZone: !GetAtt EC2Instance.AvailabilityZone
     DeletionPolicy: Delete
 
-  MountPoint:
+  AttachEBS:
     Type: 'AWS::EC2::VolumeAttachment'
     Properties:
       InstanceId: !Ref EC2Instance
@@ -190,7 +190,7 @@ Outputs:
   InstanceID:
     Value: !Ref EC2Instance
   EIP:
-    Value: !Ref IPAddress
+    Value: !Ref EIPAddress
   S3BucketName:
     Value: !Ref BucketName
   URL:
