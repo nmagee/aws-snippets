@@ -38,7 +38,7 @@ Resources:
 
 Outputs:
   SecGrpID:
-    Value: !Ref InstanceSecurityGroup
+    Value: !Ref SecurityGroup
   InstanceID:
     Value: !Ref EC2Instance
   IP:
