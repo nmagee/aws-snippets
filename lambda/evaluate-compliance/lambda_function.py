@@ -3,9 +3,21 @@ import boto3
 from datetime import datetime
 
 
+# A simple Lambda to quash any wide open SSH port rules in EC2 Security Groups
+# 
+# Functions
+#   1. lambda_handler - orchestrator
+#   2. remediate - revokes SG noncompliant ingress/egress
+#   3. send_message - sends SNS where needed
+#   4. dbinsert - logs the event to a table
+#   5. update_config - track the config change as NON_COMPLIANT or COMPLIANT
+# 
 # Use as a starter/stub -- can and should be modified for production
+
+
 FORMAT = '%Y%m%d-%H:%M:%S'
 now = datetime.now().strftime(FORMAT)
+
 
 def lambda_handler(event, context):
     invoking_event = json.loads(event['invokingEvent'])
