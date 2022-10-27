@@ -2,7 +2,7 @@
     "Version": "2012-10-17",
     "Statement": [
         {
-            "Sid": "VisualEditor0",
+            "Sid": "RevokeSgAccess",
             "Effect": "Allow",
             "Action": [
                 "ec2:RevokeSecurityGroupIngress",
@@ -11,16 +11,37 @@
             "Resource": "*"
         },
         {
-            "Sid": "VisualEditor1",
+            "Sid": "PublishSnsMessages",
             "Effect": "Allow",
             "Action": "sns:Publish",
             "Resource": "*"
         },
         {
-            "Sid": "VisualEditor2",
+            "Sid": "PutToDdbTable",
             "Effect": "Allow",
             "Action": "dynamodb:PutItem",
             "Resource": "arn:aws:dynamodb:*:*:table/cidr-status"
+        },
+        {
+            "Sid": "ConfigLogAccess",
+            "Effect": "Allow",
+            "Action": [
+                "s3:GetObject"
+            ],
+            "Resource": "arn:aws:s3:::*/AWSLogs/*/Config/*"
+        },
+        {
+            "Sid":: "ConfigAccessControl",
+            "Effect": "Allow",
+            "Action": [
+                "config:Put*",
+                "config:Get*",
+                "config:List*",
+                "config:Describe*",
+                "config:BatchGet*",
+                "config:Select*"
+            ],
+            "Resource": "*"
         }
     ]
 }

@@ -60,7 +60,7 @@ def remediate(secgrp):
 def sendmsg(arn,message):
     client = boto3.client('sns')
     response = client.publish(
-        TopicArn='arn:aws:sns:us-east-1:440848399208:SysAdmin',
+        TopicArn='arn:aws:sns:us-east-1:474683445819:SOM-Admin-Notify',
         Message = str(message) + "\n\n" + str(arn),
         Subject ='CIDR Violation'
     )
