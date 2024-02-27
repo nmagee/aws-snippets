@@ -48,6 +48,23 @@ Resources:
           apt update && apt install awscli python3-pip -y
           python3 -m pip install boto3
 
+  AddVolume:
+    Type: 'AWS::EC2::Volume'
+    Properties:
+      Size: 20
+      VolumeType: gp2
+      Encrypted: true
+      AvailabilityZone: !GetAtt EC2Instance.AvailabilityZone
+    DeletionPolicy: Delete
+
+  AttachEBS:
+    Type: 'AWS::EC2::VolumeAttachment'
+    Properties:
+      InstanceId: !Ref EC2Instance
+      VolumeId: !Ref AddVolume
+      Device: /dev/sdh
+    DeletionPolicy: Delete
+
   InstanceSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
