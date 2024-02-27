@@ -19,7 +19,7 @@ Parameters:
     Type: 'AWS::EC2::KeyPair::KeyName'
     ConstraintDescription: must be the name of an existing EC2 KeyPair.
   SSHLocation:
-    Description: The off-campus IP address range to SSH to the EC2 instances. UVA Campus is automatically granted.
+    Description: The off-campus IP address range to SSH to the EC2 instances. UVA Campus is automatically granted access.
     Type: String
     MinLength: '9'
     MaxLength: '18'
@@ -96,52 +96,10 @@ Resources:
       InstanceId: !Ref EC2Instance
       EIP: !Ref IPAddress
 
-  InstanceRole:
-    Type: 'AWS::IAM::Role'
-    Properties:
-      RoleName: ec2-instance-role
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - ec2.amazonaws.com
-            Action:
-              - 'sts:AssumeRole'
-      Path: /
-    DeletionPolicy: Delete
-
-  InstanceS3Policy:
-    Type: 'AWS::IAM::Policy'
-    Properties:
-      PolicyName: S3Policy
-      PolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Action:
-              - 's3:*'
-            Resource:
-              - !Sub arn:aws:s3:::*
-              - !Sub arn:aws:s3:::/*
-      Roles:
-        - !Ref InstanceRole
-    DeletionPolicy: Delete
-
-  InstanceProfile:
-    Type: 'AWS::IAM::InstanceProfile'
-    Properties:
-      InstanceProfileName: ec2-instance-profile
-      Path: /
-      Roles:
-        - !Ref InstanceRole
-    DeletionPolicy: Delete
-
 Outputs:
   InstanceId:
-    Description: InstanceId of the newly created EC2 instance
+    Description: InstanceId of the new EC2 instance
     Value: !Ref EC2Instance
   InstanceIPAddress:
-    Description: IP address of the newly created EC2 instance
+    Description: IP address of the new EC2 instance
     Value: !Ref IPAddress
