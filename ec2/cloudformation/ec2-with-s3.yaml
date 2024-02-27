@@ -37,7 +37,6 @@ Resources:
         - !Ref InstanceSecurityGroup
       KeyName: !Ref KeyName
       ImageId: ami-0c7217cdde317cfec
-      IamInstanceProfile: !Ref InstanceProfile
       Tags:
         - Key: Name
           Value: ds2002-ec2-instance
