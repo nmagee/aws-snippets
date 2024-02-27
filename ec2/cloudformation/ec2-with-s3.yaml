@@ -23,7 +23,7 @@ Parameters:
     Type: String
     MinLength: '9'
     MaxLength: '18'
-    Default: 0.0.0.0/0
+    Default: 1.2.3.4/32
     AllowedPattern: '(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})'
     ConstraintDescription: Must be a valid IP CIDR range of the form x.x.x.x/x.
 
@@ -62,7 +62,7 @@ Resources:
     Properties:
       InstanceId: !Ref EC2Instance
       VolumeId: !Ref AddVolume
-      Device: /dev/sdh
+      Device: /dev/sdf
     DeletionPolicy: Delete
 
   InstanceSecurityGroup:
@@ -74,6 +74,18 @@ Resources:
           FromPort: '22'
           ToPort: '22'
           CidrIp: !Ref SSHLocation
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: '128.143.0.0/16'
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: '199.111.0.0/16'
+        - IpProtocol: tcp
+          FromPort: '80'
+          ToPort: '80'
+          CidrIp: '0.0.0.0/0'
           
   IPAddress:
     Type: 'AWS::EC2::EIP'
