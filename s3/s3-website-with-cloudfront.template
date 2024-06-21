@@ -5,11 +5,9 @@ Parameters:
   S3BucketName:
     Type: String
     Description: The name for the S3 bucket - must be unique across all of AWS
-    AllowedPattern: '^[a-z0-9]{5,40}$'
 
 Resources:
   S3Bucket:
-    DeletionPolicy: 'Delete'
     Metadata:
       Comment: 'Bucket to store some data'
     Properties:
@@ -19,7 +17,6 @@ Resources:
         IndexDocument: index.html
         ErrorDocument: error.html
     Type: 'AWS::S3::Bucket'
-    DeletionPolicy: Delete
 
   S3BucketPolicy:
     Metadata:
@@ -38,7 +35,6 @@ Resources:
             Resource:
               - !Sub 'arn:aws:s3:::${S3Bucket}/*'
     Type: 'AWS::S3::BucketPolicy'
-    DeletionPolicy: Delete
 
   CfDistribution:
     Metadata:
