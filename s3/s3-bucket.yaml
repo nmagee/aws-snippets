@@ -5,11 +5,9 @@ Parameters:
   S3BucketName:
     Type: String
     Description: The name for the S3 bucket
-    AllowedPattern: '^[a-z0-9]{5,40}$'
 
 Resources:
   S3Bucket:
-    DeletionPolicy: 'Delete'
     Metadata:
       Comment: 'A Bucket to store some data'
     Properties:

@@ -7,7 +7,6 @@ Resources:
 
 # 1. Creates an S3 bucket that is private, configured to be a website.
   S3Bucket:
-    DeletionPolicy: 'Delete'
     Metadata:
       Comment: 'Bucket to store some data'
     Properties:
@@ -17,7 +16,6 @@ Resources:
         IndexDocument: index.html
         ErrorDocument: error.html
     Type: 'AWS::S3::Bucket'
-    DeletionPolicy: Delete
 
 # 2. Creates an S3 bucket policy connecting to the CloudFront OriginAccessIdentity.
 # This policy works with item #4 below and means CloudFront can read the contents of the
@@ -39,7 +37,6 @@ Resources:
             Resource:
               - !Sub 'arn:aws:s3:::${S3Bucket}/*'
     Type: 'AWS::S3::BucketPolicy'
-    DeletionPolicy: Delete
 
 # 3. Creates the actual CloudFront distribution, which allows both HEAD and GET methods, with a TTL of 86400.
 # This means the cache has a duration of 24 hours by default.
