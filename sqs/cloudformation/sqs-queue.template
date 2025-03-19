@@ -1,9 +1,26 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: SQS and Lambda
+Description: SQS with Remote Account access
 Resources:
+
   MyQueue:
     Properties:
       QueueName: simple-queue
       VisibilityTimeout: 60
     Type: 'AWS::SQS::Queue'
     DeletionPolicy: Delete
+
+  MyQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    DeletionPolicy: Delete
+    Properties:
+      Queues: !Ref MyQueue
+      PolicyDocument:
+        Statement: 
+          - 
+            Action: 
+              - "SQS:*" 
+            Effect: "Allow"
+            Resource: !Ref MyQueue
+            Principal:  
+              AWS: 
+                - "440848399208"  
