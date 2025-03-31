@@ -1,0 +1,17 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: >-
+  AWS CloudFormation template: Creates an SNS topic with email delivery
+Parameters:
+  Email:
+    Description: A valid email address for SNS delivery
+    Type: String
+
+Resources:
+  ds2002-topic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: ds2002
+      Subscription:
+        - Protocol: email-json
+          Endpoint: !Ref Email
+

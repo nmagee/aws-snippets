@@ -1,0 +1,85 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: >-
+  AWS CloudFormation template: This template builds an EC2 instance attached to
+  an elastic IP address. Bootstrapping for basic next steps.
+Parameters:
+  InstanceType:
+    Description: EC2 instance type
+    Type: String
+    Default: t2.micro
+    AllowedValues:
+      - t1.micro
+      - t2.nano
+      - t2.micro
+      - t2.small
+      - t2.medium
+    ConstraintDescription: must be a valid EC2 instance type.
+  KeyName:
+    Description: Name of an existing EC2 KeyPair to enable SSH access to the instances
+    Type: 'AWS::EC2::KeyPair::KeyName'
+    ConstraintDescription: must be the name of an existing EC2 KeyPair.
+  Email:
+    Description: A valid email address for SNS delivery
+    Type: String
+
+Resources:
+
+  EC2Instance:
+    Type: 'AWS::EC2::Instance'
+    Properties:
+      InstanceType: !Ref InstanceType
+      SecurityGroups:
+        - !Ref InstanceSecurityGroup
+      KeyName: !Ref KeyName
+      ImageId: ami-0c7217cdde317cfec
+      Tags:
+        - Key: Name
+          Value: ds2002-instance
+      UserData:
+        Fn::Base64: 
+          !Sub |
+          #!/bin/bash -xe
+          apt update && apt install git python3-pip -y
+          python3 -m pip install boto3 awscli
+
+  InstanceSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: Enable SSH access
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: '0.0.0.0/0'
+        - IpProtocol: tcp
+          FromPort: '80'
+          ToPort: '80'
+          CidrIp: '0.0.0.0/0'
+          
+  IPAddress:
+    Type: 'AWS::EC2::EIP'
+
+  IPAssoc:
+    Type: 'AWS::EC2::EIPAssociation'
+    Properties:
+      InstanceId: !Ref EC2Instance
+      EIP: !Ref IPAddress
+
+  SnsTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: ds2002
+      Subscription:
+        - Protocol: email-json
+          Endpoint: !Ref Email
+
+Outputs:
+  InstanceId:
+    Description: InstanceId of the new EC2 instance
+    Value: !Ref EC2Instance
+  InstanceIPAddress:
+    Description: IP address of the new EC2 instance
+    Value: !Ref IPAddress
+  SnsTopic:
+    Description: The SNS topic you are now subscribed to
+    Value: !Ref SnsTopic
