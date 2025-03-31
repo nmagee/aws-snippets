@@ -31,7 +31,7 @@ Resources:
       ImageId: ami-0c7217cdde317cfec
       Tags:
         - Key: Name
-          Value: ds2002-fastapi-instance
+          Value: ds2002-instance
       UserData:
         Fn::Base64: 
           !Sub |
