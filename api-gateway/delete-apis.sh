@@ -122,6 +122,10 @@ for ((i=0; i<${#DEL_IDS[@]}; i++)); do
         aws apigatewayv2 delete-api --api-id "$id" \
             && echo -e "${GREEN}done${NC}" || echo -e "${RED}failed${NC}"
     fi
+    if (( i < ${#DEL_IDS[@]} - 1 )); then
+        echo "  Waiting 20s before next request..."
+        sleep 20
+    fi
 done
 
 echo ""
