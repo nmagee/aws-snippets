@@ -93,20 +93,21 @@ draw_menu() {
     echo -e "Selected: ${YELLOW}${SELECTED_COUNT}${NC} of ${TOTAL} APIs"
 }
 
+KEYPRESS=""
 read_key() {
-    IFS= read -rsn1 key
-    if [[ "$key" == $'\x1b' ]]; then
-        read -rsn2 -t 0.1 rest || true
-        key="${key}${rest}"
+    local rest=""
+    IFS= read -rsn1 KEYPRESS
+    if [[ "$KEYPRESS" == $'\x1b' ]]; then
+        read -rsn2 -t 0.1 rest 2>/dev/null || true
+        KEYPRESS="${KEYPRESS}${rest}"
     fi
-    printf '%s' "$key"
 }
 
 while true; do
     draw_menu
-    key=$(read_key)
+    read_key
 
-    case "$key" in
+    case "$KEYPRESS" in
         $'\x1b[A')
             [ "$CURSOR" -gt 0 ] && ((CURSOR--)) || true
             ;;
