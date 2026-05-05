@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# This script lists your API Gateways and lets you select one or more at a time.
+# It assumes you have the following CLI tools installed: aws jq fzf
+
 set -uo pipefail
 
 RED='\033[0;31m'
